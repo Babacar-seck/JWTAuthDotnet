@@ -25,25 +25,21 @@ namespace JWTAuthDotnet.Controllers
             var user = await authService.RegisterAsync(request);
 
             if (user is null)
-            {
                 return BadRequest("UserName already exists.");
-            }
 
             return Ok(user);
         }
 
         [HttpPost("login")]
 
-        public async Task<ActionResult<string>> Login(UserDto request)
+        public async Task<ActionResult<TokenResponseDto>> Login(UserDto request)
         {
-            string token = await authService.LoginAsync(request);
+            TokenResponseDto? result = await authService.LoginAsync(request);
 
-            if (token is null )
-            {
+            if (result is null )
                 return BadRequest("Invalid UserName or Password");
-            }
 
-            return token;
+            return result;
         }
 
         [Authorize]
@@ -53,6 +49,22 @@ namespace JWTAuthDotnet.Controllers
             return  Ok("You are Authenticated");
         }
 
-       
+        
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin-only")]
+        public IActionResult AdminOnlyEndpoint()
+        {
+            return Ok("You are an admin!");
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<ActionResult<TokenResponseDto>> RefreshToken(RefreshTokenRequestDto resuest)
+        {
+            var result = await authService.RefreshTokensAsync(resuest);
+            if (result is null )
+                return Unauthorized("Invalid Refresh token");
+            return Ok(result);
+        }
+
     }
 }
